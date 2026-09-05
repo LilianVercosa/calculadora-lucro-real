@@ -23,6 +23,37 @@ async function addNote(subdomain, token, leadId, text) {
   }
 }
 
+async function addTagToLead(subdomain, token, leadId, tagName) {
+  try {
+    const getRes = await fetch(`https://${subdomain}.kommo.com/api/v4/leads/${leadId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!getRes.ok) return;
+
+    const leadData = await getRes.json();
+    const existingTags = leadData?._embedded?.tags || [];
+
+    const alreadyHasTag = existingTags.some((t) => t.name === tagName);
+    if (alreadyHasTag) return;
+
+    const mergedTags = [
+      ...existingTags.map((t) => ({ id: t.id })),
+      { name: tagName },
+    ];
+
+    await fetch(`https://${subdomain}.kommo.com/api/v4/leads/${leadId}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ _embedded: { tags: mergedTags } }),
+    });
+  } catch (err) {
+    console.error('Falha ao adicionar tag:', err);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -30,7 +61,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, phone, segment, leadId, margin, faturamento } = req.body || {};
+    const { name, phone, segment, leadId, margin, faturamento, taxAlert } = req.body || {};
 
     if (!name || !phone) {
       res.status(400).json({ error: 'Nome e telefone são obrigatórios' });
@@ -72,6 +103,10 @@ export default async function handler(req, res) {
         }
 
         await addNote(subdomain, token, leadId, noteLines.join('\n'));
+
+        if (taxAlert) {
+          await addTagToLead(subdomain, token, leadId, 'Imposto alto');
+        }
       }
 
       res.status(200).json({ ok: true, leadId });
@@ -89,6 +124,7 @@ export default async function handler(req, res) {
 
     const tags = [];
     if (segment) tags.push({ name: segment });
+    if (hasResult && taxAlert) tags.push({ name: 'Imposto alto' });
 
     const leadPayload = {
       name: leadName,
