@@ -544,6 +544,7 @@ function parseMoney(id){
 
 let lastMargin = 0;
 let lastFaturamento = 0;
+let lastTaxAlert = false;
 
 document.getElementById('calc-btn').addEventListener('click', () => {
   const faturamento = parseMoney('f-faturamento');
@@ -615,13 +616,16 @@ document.getElementById('calc-btn').addEventListener('click', () => {
       alertBox.style.display = 'block';
       alertText.textContent = `Seu imposto está em ${taxPct}% do faturamento, e sua clínica fatura até R$ 25 mil por mês. Nessa faixa, é bem comum estar pagando mais imposto do que precisaria. Vale revisar o enquadramento tributário com atenção.`;
       taxInsightEl.textContent = '';
+      lastTaxAlert = true;
     } else {
       alertBox.style.display = 'none';
       taxInsightEl.textContent = `O imposto representa ${taxPct}% do que entra na clínica.`;
+      lastTaxAlert = false;
     }
   } else {
     document.getElementById('tax-alert-box').style.display = 'none';
     taxInsightEl.textContent = '';
+    lastTaxAlert = false;
   }
 
   goTo('screen-result');
@@ -648,7 +652,8 @@ document.getElementById('see-final-btn').addEventListener('click', () => {
         segment: leadSegment,
         leadId: leadId,
         margin: lastMargin.toFixed(1),
-        faturamento: lastFaturamento
+        faturamento: lastFaturamento,
+        taxAlert: lastTaxAlert
       })
     }).catch(() => { /* falha silenciosa, não bloqueia o usuário */ });
   } catch (err) {
