@@ -1,4 +1,4 @@
-const PIPELINE_ID = 14272563; // Funil de isca: mesmo funil do Diagnóstico Simples ou Híbrido
+const PIPELINE_ID = 13203451; // Funil de isca: Calculadora Lucro Real
 
 const FIELD_MARGEM = null; // preencher com o ID do campo "Lucro Real: Margem" depois de criá-lo no Kommo
 const FIELD_FATURAMENTO = null; // preencher com o ID do campo "Lucro Real: Faturamento" depois de criá-lo no Kommo
